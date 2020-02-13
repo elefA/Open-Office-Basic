@@ -1,0 +1,161 @@
+REM  *****  BASIC  *****
+Option Explicit
+Dim DatabaseContext As Object
+Dim Names
+Dim I As Integer
+Dim DataSource as object
+Dim Statement As Object
+Dim ResultSet As Object
+Dim KwdikosCtrl As Object
+Dim Promh8euthsCtrl As Object
+Dim KostosCtrl as object
+Dim ErgostasioCtrl as Object
+Dim MonMetrhshsCtrl As Object
+Dim HmUpdateCtrl As Object
+Dim PerigrafhCtrl as Object
+
+Dim Dlg As Object
+Dim Doc As Object
+Dim Url As String
+Dim Sheet As Object
+Dim Dummy() 'An (empty) array of PropertyValues
+ 
+
+
+
+Sub Main
+
+Url =""
+
+DialogLibraries.LoadLibrary("Standard")
+Dlg = CreateUnoDialog(DialogLibraries.Standard.Dialog1)
+Dlg.Execute()
+Dlg.dispose()
+
+End Sub
+
+
+
+
+Sub Macro1
+
+		Dim Kwdikos as String
+		Dim InteractionHandler as object
+		Dim Connection as object
+		DatabaseContext = createUnoService("com.sun.star.sdb.DatabaseContext") 
+		Names = DatabaseContext.getElementNames()
+		DataSource = DatabaseContext.getByName("Final file Database")
+		
+		If Not DataSource.IsPasswordRequired Then
+		  Connection = DataSource.GetConnection("","")
+		Else
+		  InteractionHandler = createUnoService("com.sun.star.sdb.InteractionHandler")
+		  Connection = DataSource.ConnectWithCompletion(InteractionHandler)
+		End If
+		'Initialisation of UI elements DLG einai o dialogos kai apo ekei pairnoume ta elements mesa tou
+		KwdikosCtrl = Dlg.getControl("Kwdikos")
+		Promh8euthsCtrl = Dlg.getControl("Promh8euths")
+		KostosCtrl = Dlg.getControl("Kostos")
+		ErgostasioCtrl=Dlg.getControl("Ergostasio")
+		MonMetrhshsCtrl = Dlg.getCOntrol("MonMetrhshs")
+		HmUpdateCtrl = Dlg.getControl("HmUpdate")
+		PerigrafhCtrl= Dlg.getControl("Perigrafh")
+		
+		'O kwdikos p valame ston dialogo apo8hkeuetai se auth thn metavlhth wste na psaxoume meta thn vash dedomenwn
+		Kwdikos = KwdikosCtrl.Text	
+		
+		'Query 
+		Statement = Connection.createStatement(
+		ResultSet = Statement.executeQuery("SELECT κωδικοσ,""στοιχεια ειδων"".περιγραφη,""κωδικος εργοστασιου"",προμηθευτησ, ""ΚΟΣΤΟΣ EX FACTORY"", ""μοναδεσ μετρησησ"".""ΠΕΡΙΓΡΑΦΗ"", ""ΗΜΕΡΟΜΗΝΙΑ UPDATE EX-FACTORY"" FROM ""ΣΤΟΙΧΕΙΑ ΕΙΔΩΝ"",""μοναδεσ μετρησησ""  WHERE ""στοιχεια ειδων"".""ΜΟΝΑΔΑ ΜΕΤΡΗΣΗΣ ΠΩΛΗΣΗΣ"" = ""μοναδεσ μετρησησ"".""ΚΩΔΙΚΟΣ ΜΟΝΑΔΑΣ ΜΕΤΡΗΣΗΣ"" AND κωδικος = "+Kwdikos ) 
+		
+		
+		If Not IsNull(ResultSet) Then
+			ResultSet.next
+			PerigrafhCtrl.Text = ResultSet.getString(2)
+			ErgostasioCtrl.Text = ResultSet.getString(3)
+			Promh8euthsCtrl.Text = ResultSet.getString(4)
+			KostosCtrl.Text = ResultSet.getString(5)			
+			MonMetrhshsCtrl.Text = ResultSet.getString(6)
+			HmUpdateCtrl.Text = ResultSet.getString(7)			
+		End If
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+Sub Macro2()
+Dim I as Integer
+Dim K as Integer
+Dim Index as Integer
+Dim Cell
+
+'Open Excel File
+
+if Url = "" then
+	Url = "file:///C:/test.ods" 
+	Doc = StarDesktop.loadComponentFromURL(Url, "_blank", 0, Dummy)
+	Sheet = Doc.Sheets(0)
+End if
+`Tsekaroume na doume thn prwth grammh tou excel p einai kenh sthn sthlh A wste na grapsoume ekei
+For I = 0 to 1000
+	Cell = Sheet.getCellByPosition(0,I)
+	if Cell.String = "" then
+		Index = I
+		Exit For
+	end if
+Next I
+
+For K = 0 to 6
+	Cell = Sheet.getCellByPosition(K,Index)
+	Select Case K
+		Case 0:
+			Cell.String = KwdikosCtrl.Text
+		Case 1:
+			Cell.String = PerigrafhCtrl.Text
+		Case 2:
+			Cell.String = Promh8euthsCtrl.Text
+		Case 3:
+			Cell.String = KostosCtrl.Text
+		Case 4:
+			Cell.String = HmUpdateCtrl.Text
+		Case 5:
+			Cell.String = MonMetrhshsCtrl.Text
+		Case 6:
+			Cell.String = ErgostasioCtrl.Text
+	End Select
+Next K
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
